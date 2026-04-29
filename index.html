@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliação de Desempenho CS - Contele</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --blue-primary: #2563EB;
+            --blue-secondary: #0F172A;
+            --blue-light: #EFF6FF;
+            --fleet-color: #8B5CF6; 
+            --bg-page: #F8FAFC;
+            --card-border: #E2E8F0;
+            --sidebar-width: 280px;
+            --text-dark: #1E293B;
+            --text-gray: #64748B;
+            --gray-discreet: #94A3B8;
+            --gray-hover: #64748B;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif; background-color: var(--bg-page);
+            color: var(--text-dark); overflow: hidden; width: 100vw; height: 100vh; display: flex;
+        }
+
+        /* SIDEBAR */
+        #sidebar {
+            width: var(--sidebar-width); height: 100%;
+            background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+            color: white; padding: 24px 16px; display: flex; flex-direction: column;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.15); z-index: 1000;
+        }
+
+        .sidebar-title { font-size: 15px; font-weight: 800; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; text-transform: uppercase; letter-spacing: 1px; color: #E2E8F0; }
+        .index-list { list-style: none; overflow-y: auto; flex: 1; }
+        .index-group { font-size: 11px; font-weight: 700; color: #94A3B8; margin-top: 20px; margin-bottom: 8px; padding-left: 12px; text-transform: uppercase; letter-spacing: 1.5px; }
+        .index-item { padding: 12px 14px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s ease; color: #CBD5E1; display: flex; align-items: center; gap: 10px; }
+        .index-item:hover { background-color: rgba(255,255,255,0.08); color: white; transform: translateX(4px); }
+        .index-item.active-nav { background-color: var(--blue-primary); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); font-weight: 600; }
+
+        /* CONTAINER SLIDES */
+        #presentation-container { width: calc(100% - var(--sidebar-width)); height: 100%; position: relative; background-image: radial-gradient(#E2E8F0 1.5px, transparent 1.5px); background-size: 30px 30px; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 25px 40px; opacity: 0; visibility: hidden; transition: opacity 0.5s ease, visibility 0.5s; display: flex; flex-direction: column; background: rgba(248, 250, 252, 0.92); backdrop-filter: blur(10px); }
+        .slide.active { opacity: 1; visibility: visible; }
+        .slide-cover { justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #E0E7FF 100%); }
+        .logo-cover { width: 420px; margin-bottom: 30px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1)); }
+        .logo-mini { position: absolute; top: 25px; right: 40px; width: 150px; z-index: 10; }
+
+        h1 { color: var(--blue-secondary); font-size: 56px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 10px; }
+        h2 { color: var(--blue-secondary); font-size: 34px; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        h2::before { content: ''; display: block; width: 8px; height: 34px; background: var(--blue-primary); border-radius: 4px; }
+
+        /* SLIDE 1: PAINEL DE REGRAS */
+        .rules-container { display: flex; flex-direction: column; gap: 12px; flex: 1; padding-bottom: 60px; min-height: 0; }
+        .dictionary-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 12px; flex: 1.8; min-height: 0; }
+        .competency-card { background: white; border-radius: 12px; padding: 12px 14px; border: 1px solid var(--card-border); box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 5px; overflow: hidden; justify-content: center; cursor: pointer; transition: all 0.2s ease; position: relative; }
+        .competency-card:hover { transform: translateY(-3px); border-color: var(--blue-primary); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1); }
+        .competency-card h5 { font-size: 15px; font-weight: 800; color: var(--blue-primary); display: flex; justify-content: space-between; border-bottom: 1px solid #F1F5F9; padding-bottom: 4px; margin: 0; }
+        .competency-card .comp-desc-short { font-size: 12.5px; color: var(--text-dark); line-height: 1.3; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .click-hint { font-size: 10px; color: var(--blue-primary); font-weight: 700; text-transform: uppercase; margin-top: 4px; display: flex; align-items: center; gap: 5px; opacity: 0.7; }
+        .ref-tables-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; flex: 1.1; min-height: 0; }
+        .ref-table-wrapper { background: white; border-radius: 12px; border: 1px solid var(--card-border); display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.02); overflow: hidden; }
+        .ref-table-wrapper h6 { background: #F1F5F9; padding: 8px 12px; font-size: 13px; font-weight: 800; color: var(--blue-secondary); border-bottom: 1px solid var(--card-border); margin: 0; }
+        .table-responsive { flex: 1; overflow-y: auto; }
+        .ref-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+        .ref-table th { padding: 6px 4px; border-bottom: 1px solid var(--card-border); font-weight: 700; text-align: center; color: var(--text-gray); background: #F8FAFC; position: sticky; top: 0;}
+        .ref-table td { padding: 5px 4px; border-bottom: 1px solid #F1F5F9; text-align: center; font-weight: 600; color: var(--text-dark); }
+
+        /* LAYOUT AVALIAÇÃO */
+        .detail-grid { display: grid; grid-template-columns: 1fr 260px; gap: 15px; flex: 1; height: calc(100% - 130px); margin-bottom: 20px; }
+        .detail-card-updated { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--card-border); box-shadow: 0 10px 30px rgba(0,0,0,0.04); overflow-y: auto; overflow-x: hidden; }
+        .visual-col { display: flex; flex-direction: column; gap: 15px; background: white; border-radius: 16px; border: 1px dashed var(--card-border); padding: 20px; text-align: center; align-items: center; justify-content: center; }
+        .team-section { border: 1px solid var(--card-border); border-radius: 12px; background: #fff; margin-bottom: 25px; overflow: hidden; }
+        .team-header { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: white; }
+        .team-header.teams { background: var(--blue-primary); }
+        .team-header.fleet { background: var(--fleet-color); }
+        .team-header.final { background: linear-gradient(90deg, var(--blue-primary) 0%, var(--fleet-color) 100%); }
+        .team-header h4 { font-size: 18px; font-weight: 700; margin: 0; }
+        
+        .eval-table-container { width: 100%; overflow-x: auto; }
+        .eval-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+        .eval-table th { background: #F1F5F9; padding: 10px 6px; font-weight: 700; border-bottom: 2px solid var(--card-border); text-align: center; color: var(--blue-secondary); font-size: 11px; line-height: 1.2;}
+        .eval-table td { padding: 10px 4px; text-align: center; border-bottom: 1px solid var(--card-border); font-weight: 600; vertical-align: middle; }
+        input[type="number"] { width: 55px; padding: 8px 4px; border: 1px solid #CBD5E1; border-radius: 6px; text-align: center; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; }
+        .badge-level { padding: 6px 12px; border-radius: 50px; font-size: 11px; font-weight: 800; background: var(--blue-light); color: var(--blue-primary); text-transform: uppercase; display: inline-block; }
+        .result-cell { cursor: pointer; transition: background 0.2s; position: relative; }
+        .result-cell:hover { background-color: #F1F5F9; }
+
+        /* PERFIL CS NA TABELA (Líderes e Final) */
+        .cs-profile { display: flex; align-items: center; gap: 10px; text-align: left; padding-left: 5px; }
+        .cs-profile img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .cs-profile.teams img { border: 2px solid var(--blue-primary); }
+        .cs-profile.fleet img { border: 2px solid var(--fleet-color); }
+        .cs-info { display: flex; flex-direction: column; }
+        .cs-name { font-weight: 700; font-size: 13px; color: var(--blue-secondary); }
+        .cs-role { font-weight: 500; font-size: 10px; color: var(--text-gray); }
+        .avg-grade { font-weight: 700; color: var(--blue-primary); font-size: 14px; }
+
+        .controls { position: absolute; bottom: 20px; right: 40px; display: flex; gap: 10px; z-index: 1000; background: rgba(248, 250, 252, 0.8); padding: 8px; border-radius: 50px; backdrop-filter: blur(5px);}
+        .control-btn { background: white; color: var(--text-dark); border: 1px solid var(--card-border); padding: 10px 20px; border-radius: 50px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .control-btn:hover:not(:disabled) { background: var(--blue-primary); color: white; border-color: var(--blue-primary); transform: translateY(-2px); }
+        .control-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+        .btn-export { background: transparent; color: var(--gray-discreet); border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s ease; font-size: 14px; width: 100%; margin-top: 10px;}
+        .btn-export:hover { background: #F8FAFC; color: var(--gray-hover); border-color: var(--gray-discreet); transform: translateY(-1px); }
+
+        .pdf-only-header { display: none; text-align: center; margin-bottom: 20px; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: white; border-radius: 16px; width: 750px; max-width: 90%; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); position: relative; animation: modalIn 0.25s ease-out; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 16px; margin-bottom: 16px; }
+        .modal-header h3 { color: var(--blue-secondary); font-size: 22px; font-weight: 800; margin: 0; }
+        .close-btn { background: none; border: none; font-size: 24px; color: var(--text-gray); cursor: pointer; transition: color 0.2s; }
+        .close-btn:hover { color: var(--blue-secondary); }
+        
+        .modal-body-content { font-size: 15px; color: var(--text-dark); line-height: 1.6; }
+        .modal-body-content b { color: var(--blue-primary); }
+        .eval-section { background: #F8FAFC; border-radius: 12px; padding: 15px; border-left: 5px solid var(--blue-primary); margin-top: 20px; }
+
+        .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+        .calc-box { background: var(--bg-page); padding: 20px; border-radius: 12px; border: 1px solid var(--card-border); }
+        .calc-box h4 { font-size: 15px; font-weight: 800; color: var(--blue-secondary); margin-bottom: 12px; border-bottom: 2px solid #E2E8F0; padding-bottom: 8px;}
+        .calc-item { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 8px; color: var(--text-dark); font-weight: 500;}
+        .calc-item.total { font-weight: 800; color: var(--blue-primary); margin-top: 15px; border-top: 1px dashed #CBD5E1; padding-top: 15px; font-size: 16px; }
+        .calc-status { font-weight: 700; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+        .status-ok { background: #DCFCE7; color: #166534; }
+        .status-fail { background: #FEE2E2; color: #991B1B; }
+        .status-info { background: #EFF6FF; color: #1E40AF; }
+    </style>
+</head>
+<body>
+
+    <div id="presentation-container">
+
+        <div class="slide slide-cover active" id="slide-0">
+            <img src="https://i.ibb.co/WNRdTN7j/oie-transparent-37.png" class="logo-cover" alt="Contele Logo">
+            <h1>Avaliação Periódica CS</h1>
+            <p style="font-size: 28px; color: var(--text-gray); font-weight: 500;">Ciclo de Performance 2024 • Liderança Integrada</p>
+        </div>
+
+        <div class="slide" id="slide-1">
+            <img src="https://i.ibb.co/WNRdTN7j/oie-transparent-37.png" class="logo-mini">
+            <h2>📘 Painel de Consulta e Regras</h2>
+            <div class="rules-container">
+                <div class="dictionary-grid">
+                    <div class="competency-card" onclick="showCompModal(0)">
+                        <h5>Autonomia <span>x1.0</span></h5>
+                        <div class="comp-desc-short">Decisões próprias e gestão de carteira sem dependência constante.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                    <div class="competency-card" onclick="showCompModal(1)">
+                        <h5>Conhecimento Técnico <span>x1.3</span></h5>
+                        <div class="comp-desc-short">Domínio profundo dos produtos, integrações e configurações.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                    <div class="competency-card" onclick="showCompModal(2)">
+                        <h5>Comunicação Comercial <span>x1.3</span></h5>
+                        <div class="comp-desc-short">Clareza, persuasão e cordialidade. Gestão de retenção.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                    <div class="competency-card" onclick="showCompModal(3)">
+                        <h5>Inovação (IA) <span>x1.0</span></h5>
+                        <div class="comp-desc-short">Sugestão de melhorias e uso de IA para otimizar tarefas.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                    <div class="competency-card" onclick="showCompModal(4)">
+                        <h5>Evolução <span>x1.2</span></h5>
+                        <div class="comp-desc-short">Curva de aprendizado e desenvolvimento pessoal contínuo.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                    <div class="competency-card" onclick="showCompModal(5)">
+                        <h5>Comportamento <span>x1.2</span></h5>
+                        <div class="comp-desc-short">Inteligência emocional, ética e alinhamento cultural.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                    <div class="competency-card" onclick="showCompModal(6)">
+                        <h5>Organização <span>x0.9</span></h5>
+                        <div class="comp-desc-short">Gestão de tempo, priorização e manutenção do CRM.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                    <div class="competency-card" onclick="showCompModal(7)">
+                        <h5>Metas <span>x1.2</span></h5>
+                        <div class="comp-desc-short">Atingimento dos indicadores numéricos estipulados.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                    <div class="competency-card" onclick="showCompModal(8)">
+                        <h5>Protagonismo <span>x0.9</span></h5>
+                        <div class="comp-desc-short">Atitude de dono, referência e responsabilidade em crises.</div>
+                        <div class="click-hint"><i class="fa-solid fa-circle-plus"></i> Ver detalhes</div>
+                    </div>
+                </div>
+
+                <div class="ref-tables-grid">
+                    <div class="ref-table-wrapper">
+                        <h6>⏱️ Tempo de Casa para Promoção</h6>
+                        <div class="table-responsive">
+                            <table class="ref-table">
+                                <thead><tr><th>NÍVEL</th><th>MÉDIA</th><th>AUTO</th><th>MIN</th></tr></thead>
+                                <tbody>
+                                    <tr><td>SÊNIOR 3</td><td>94-100</td><td>10 anos</td><td>4 anos</td></tr>
+                                    <tr><td>SÊNIOR 2</td><td>90-94</td><td>8 anos</td><td>3.5 anos</td></tr>
+                                    <tr><td>SÊNIOR 1</td><td>85-90</td><td>6 anos</td><td>3 anos</td></tr>
+                                    <tr><td>PLENO 4</td><td>80-85</td><td>4 anos</td><td>2 anos</td></tr>
+                                    <tr><td>PLENO 3</td><td>76-80</td><td>3 anos</td><td>1.5 ano</td></tr>
+                                    <tr><td>PLENO 2</td><td>72-76</td><td>2 anos</td><td>1 ano</td></tr>
+                                    <tr><td>PLENO 1</td><td>68-72</td><td>1 ano</td><td>6 meses</td></tr>
+                                    <tr><td>JUNIOR 2</td><td>65-68</td><td>3 meses</td><td>3 meses</td></tr>
+                                    <tr><td>JUNIOR 1</td><td>< 64</td><td>-</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="ref-table-wrapper">
+                        <h6>🎯 Critérios Mínimos (Notas Mínimas por Nível)</h6>
+                        <div class="table-responsive">
+                            <table class="ref-table">
+                                <thead><tr><th>CARGO</th><th>AUT</th><th>TEC</th><th>COM</th><th>INO</th><th>EVO</th><th>CMP</th><th>ORG</th><th>MET</th><th>PRO</th></tr></thead>
+                                <tbody>
+                                    <tr><td>JUNIOR 2</td><td>7</td><td>7</td><td>7</td><td>6.5</td><td>6.5</td><td>8</td><td>6.5</td><td>6</td><td>6</td></tr>
+                                    <tr><td>PLENO 1</td><td>7.5</td><td>8</td><td>7.5</td><td>7</td><td>7</td><td>8</td><td>7</td><td>7</td><td>7</td></tr>
+                                    <tr><td>PLENO 2</td><td>7.5</td><td>8.5</td><td>8</td><td>7.5</td><td>7.5</td><td>8.5</td><td>7.5</td><td>7</td><td>7.5</td></tr>
+                                    <tr><td>PLENO 3</td><td>8</td><td>8.5</td><td>8</td><td>8</td><td>8</td><td>8.5</td><td>8</td><td>8</td><td>7.5</td></tr>
+                                    <tr><td>PLENO 4</td><td>8.5</td><td>9</td><td>9</td><td>8</td><td>8.5</td><td>9</td><td>8.5</td><td>8.5</td><td>8</td></tr>
+                                    <tr><td>SÊNIOR 1</td><td>9</td><td>9</td><td>9</td><td>8.5</td><td>9</td><td>9</td><td>9</td><td>9</td><td>9</td></tr>
+                                    <tr><td>SÊNIOR 2</td><td>9</td><td>9.5</td><td>9.5</td><td>8.5</td><td>9.5</td><td>9</td><td>9</td><td>9</td><td>9</td></tr>
+                                    <tr><td>SÊNIOR 3</td><td>9.5</td><td>10</td><td>10</td><td>9</td><td>10</td><td>9</td><td>9.5</td><td>9.5</td><td>9</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" id="slide-2">
+            <img src="https://i.ibb.co/WNRdTN7j/oie-transparent-37.png" class="logo-mini">
+            <h2>👨🏻‍💻 Avaliação: Douglas</h2>
+            <div class="detail-grid">
+                <div class="detail-card-updated" id="area-douglas"><div class="pdf-only-header"><h2>Douglas</h2></div><div id="content-douglas"></div></div>
+                <div class="visual-col">
+                    <i class="fa-solid fa-user-tie" style="color: var(--blue-primary); font-size: 60px;"></i>
+                    <h3 style="margin-top: 10px;">Douglas</h3><p>Líder Contele Teams</p>
+                    <button class="btn-export" onclick="exportPDF('area-douglas', 'Avaliacao_Douglas.pdf')"><i class="fa-solid fa-download"></i> Exportar PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" id="slide-3">
+            <img src="https://i.ibb.co/WNRdTN7j/oie-transparent-37.png" class="logo-mini">
+            <h2>👩🏻‍💼 Avaliação: Susana</h2>
+            <div class="detail-grid">
+                <div class="detail-card-updated" id="area-susana"><div class="pdf-only-header"><h2>Susana</h2></div><div id="content-susana"></div></div>
+                <div class="visual-col">
+                    <i class="fa-solid fa-user-group" style="color: #F59E0B; font-size: 60px;"></i>
+                    <h3 style="margin-top: 10px;">Susana</h3><p>Líder Equipe CS</p>
+                    <button class="btn-export" onclick="exportPDF('area-susana', 'Avaliacao_Susana.pdf')"><i class="fa-solid fa-download"></i> Exportar PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" id="slide-4">
+            <img src="https://i.ibb.co/WNRdTN7j/oie-transparent-37.png" class="logo-mini">
+            <h2>👩🏼‍💻 Avaliação: Fernanda</h2>
+            <div class="detail-grid">
+                <div class="detail-card-updated" id="area-fernanda"><div class="pdf-only-header"><h2>Fernanda</h2></div><div id="content-fernanda"></div></div>
+                <div class="visual-col">
+                    <i class="fa-solid fa-car" style="color: var(--fleet-color); font-size: 60px;"></i>
+                    <h3 style="margin-top: 10px;">Fernanda</h3><p>Líder Contele Fleet</p>
+                    <button class="btn-export" onclick="exportPDF('area-fernanda', 'Avaliacao_Fernanda.pdf')"><i class="fa-solid fa-download"></i> Exportar PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide" id="slide-5">
+            <img src="https://i.ibb.co/WNRdTN7j/oie-transparent-37.png" class="logo-mini">
+            <h2>🏆 Resultado Final Integrado (Média)</h2>
+            <div class="detail-grid" style="grid-template-columns: 1fr 220px;">
+                <div class="detail-card-updated" id="area-final" style="padding: 15px;">
+                    <div class="pdf-only-header"><h2>Resultado Final Integrado</h2></div>
+                    <div id="content-final"></div>
+                </div>
+                <div class="visual-col" style="justify-content: flex-start; padding-top: 30px;">
+                    <i class="fa-solid fa-medal" style="color: #10B981; font-size: 60px;"></i>
+                    <h3 style="margin-top: 10px; font-size: 18px;">Média Consolidada</h3>
+                    <p style="font-size: 12px;">Notas alimentadas automaticamente.</p>
+                    <div style="background: var(--bg-page); padding: 10px; border-radius: 8px; font-size: 11px; color: var(--text-gray); border: 1px solid var(--card-border); margin-top: 10px; text-align: left;">
+                        Insira aqui os <b>Meses de Casa</b> para fechar a promoção.
+                    </div>
+                    <button class="btn-export" onclick="exportPDF('area-final', 'Resultado_Final_CS.pdf')" style="margin-top: auto;"><i class="fa-solid fa-download"></i> Exportar Final</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="prevBtn" onclick="prevSlide()"><i class="fa-solid fa-arrow-left"></i> Anterior</button>
+            <button class="control-btn" id="nextBtn" onclick="nextSlide()">Próximo <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <div id="sidebar">
+        <div class="sidebar-title">Menu Avaliação</div>
+        <ul class="index-list">
+            <li class="index-item active-nav" onclick="goToSlide(0)"><i class="fa-solid fa-house"></i> Início</li>
+            <li class="index-item" onclick="goToSlide(1)"><i class="fa-solid fa-book"></i> Regras & Consulta</li>
+            <div class="index-group">Avaliadores Ind.</div>
+            <li class="index-item" onclick="goToSlide(2)"><i class="fa-solid fa-user-pen"></i> Douglas</li>
+            <li class="index-item" onclick="goToSlide(3)"><i class="fa-solid fa-user-pen"></i> Susana</li>
+            <li class="index-item" onclick="goToSlide(4)"><i class="fa-solid fa-user-pen"></i> Fernanda</li>
+            <div class="index-group">Consolidação</div>
+            <li class="index-item" onclick="goToSlide(5)"><i class="fa-solid fa-medal" style="color: #10B981;"></i> Resultado Final</li>
+        </ul>
+    </div>
+
+    <div id="genericModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle">Título</h3>
+                <button class="close-btn" onclick="closeModal()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        const weights = [1, 1.3, 1.3, 1, 1.2, 1.2, 0.9, 1.2, 0.9];
+        const criteriaNames = ["Autonomia", "Conhecimento Técnico", "Comunicação Comercial", "Inovação", "Evolução", "Comportamento", "Organização", "Metas", "Protagonismo"];
+        
+        // Dados das equipes atualizados com as novas imagens e cargos corrigidos
+        const teamsData = [
+            { id: 't0', name: 'Luana Mello', role: 'Base GC', img: 'https://i.ibb.co/LXfWLNdL/PERFIL-luana-mello-1.jpg' },
+            { id: 't1', name: 'Tauany Patrícia', role: 'Onboarding', img: 'https://i.ibb.co/8gHzdMjx/PERFIL-tauany-patricia.jpg' },
+            { id: 't2', name: 'Cristopher David', role: 'Base 10 a 29', img: 'https://i.ibb.co/zHxYBjsG/PERFIL-cristopher-david.jpg' }
+        ];
+
+        const fleetData = [
+            { id: 'f0', name: 'Thawane Querino', role: 'Base 10 a 29', img: 'https://i.ibb.co/PG668GWN/PERFIL-thawane-querino-1.jpg' },
+            { id: 'f1', name: 'Filipe Teixeira', role: 'Base 4 a 9', img: 'https://i.ibb.co/7d2S5yRv/PERFIL-filipe-teixeira.png' },
+            { id: 'f2', name: 'Larissa Cordeiro', role: 'Onboarding', img: 'https://i.ibb.co/5X8jfTF5/PERFIL-larissa-cordeiro-1.jpg' },
+            { id: 'f3', name: 'Nathaly Dantas', role: 'Base GC', img: 'https://i.ibb.co/SDgrjBDY/PERFIL-nathaly-dantas-1.jpg' }
+        ];
+
+        const compFullData = [
+            { title: "Autonomia (Peso 1.0)", desc: "Capacidade de tomar decisões, gerenciar sua própria carteira de clientes e resolver problemas do dia a dia sem depender constantemente de aprovações, supervisão ou da intervenção de terceiros.", eval: "O colaborador consegue investigar um problema sozinho antes de escalar? Toma a frente nas decisões rotineiras que lhe são cabíveis?" },
+            { title: "Conhecimento Técnico (Peso 1.3)", desc: "Nível de profundidade e domínio sobre os produtos (Teams ou Fleet), suas funcionalidades, integrações e atualizações.", eval: "O quão bem o CS consegue orientar o cliente no uso avançado do software? Ele domina as configurações técnicas necessárias para garantir o sucesso do cliente?" },
+            { title: "Comunicação Comercial (Peso 1.3)", desc: "Clareza, empatia, persuasão e adequação do tom de voz na comunicação (escrita e falada) com o cliente. Envolve a habilidade de contornar objeções, negociar (upsell/cross-sell) e reter clientes em risco (churn).", eval: "O e-mail e o discurso em reuniões são profissionais e transmitem segurança? Sabe lidar bem com clientes insatisfeitos? Trata bem os clientes e com a cordialidade necessária? Sabe se impor em situações necessárias?" },
+            { title: "Inovação (Peso 1.0)", desc: "Proatividade em buscar novas soluções, sugerir melhorias de processos internos ou criar estratégias fora da caixa para aumentar o engajamento dos clientes com a plataforma. Utilização de IA é importante.", eval: "Traz ideias novas para o setor? Tenta resolver problemas antigos de formas mais inteligentes e eficientes? Utiliza IA para facilitar as tarefas repetitivas?" },
+            { title: "Evolução (Peso 1.2)", desc: "A curva de aprendizado do colaborador desde a última avaliação e desde sua entrada na empresa. Mede a capacidade de absorver feedbacks, corrigir rotas e demonstrar crescimento contínuo. Desenvolvimento pessoal também é avaliado.", eval: "O CS comete os mesmos erros do passado ou mostrou amadurecimento? Melhorou seus pontos fracos? Realizou cursos ou algum estudo para desenvolvimento pessoal e profissional?" },
+            { title: "Comportamento (Peso 1.2)", desc: "Postura profissional, inteligência emocional, ética, trabalho em equipe e relacionamento interpessoal. Avalia o quão alinhado o CS está com a cultura e os valores da Contele. Assiduidade também é avaliado.", eval: "Mantém a calma sob pressão? Ajuda os colegas? É respeitoso e tem uma postura colaborativa no ambiente de trabalho? É assíduo com os compromissos e horários estabelecidos?" },
+            { title: "Organização (Peso 0.9)", desc: "Capacidade de gestão de tempo, priorização de chamados/tarefas, manutenção do CRM ou painéis de controle atualizados e pontualidade em reuniões.", eval: "Deixa tarefas acumularem? Esquece de registrar o histórico dos clientes no sistema? Sabe priorizar o que é urgente do que é importante?" },
+            { title: "Metas (Peso 1.2)", desc: "O atingimento puro e simples dos indicadores-chave de performance (KPIs) numéricos definidos para o cargo e para o setor.", eval: "Bateu as metas numéricas estipuladas no mês, trimestre e semestre?" },
+            { title: "Protagonismo (Peso 0.9)", desc: "Atitude de dono (ownership). É o ímpeto de 'chamar a responsabilidade para si', não se omitir diante de crises e conduzir o cliente ao sucesso de ponta a ponta. Ser referência aos colegas também é parte da avaliação.", eval: "Quando um cliente está com problemas complexos, o CS lidera a resolução ou apenas repassa a bola? Ele age como o principal defensor do sucesso daquele cliente?" }
+        ];
+
+        const levelRules = [
+            { name: "SÊNIOR 3", min: 94, minT: 48, auto: 120, minNotes: [9.5, 10, 10, 9, 10, 9, 9.5, 9.5, 9] },
+            { name: "SÊNIOR 2", min: 90, minT: 42, auto: 96, minNotes: [9, 9.5, 9.5, 8.5, 9.5, 9, 9, 9, 9] },
+            { name: "SÊNIOR 1", min: 85, minT: 36, auto: 72, minNotes: [9, 9, 9, 8.5, 9, 9, 9, 9, 9] },
+            { name: "PLENO 4", min: 80, minT: 24, auto: 48, minNotes: [8.5, 9, 9, 8, 8.5, 9, 8.5, 8.5, 8] },
+            { name: "PLENO 3", min: 76, minT: 18, auto: 36, minNotes: [8, 8.5, 8, 8, 8, 8.5, 8, 8, 7.5] },
+            { name: "PLENO 2", min: 72, minT: 12, auto: 24, minNotes: [7.5, 8.5, 8, 7.5, 7.5, 8.5, 7.5, 7, 7.5] },
+            { name: "PLENO 1", min: 68, minT: 6, auto: 12, minNotes: [7.5, 8, 7.5, 7, 7, 8, 7, 7, 7] },
+            { name: "JUNIOR 2", min: 65, minT: 3, auto: 3, minNotes: [7, 7, 7, 6.5, 6.5, 8, 6.5, 6, 6] },
+            { name: "JUNIOR 1", min: 0, minT: 0, auto: 0, minNotes: [0, 0, 0, 0, 0, 0, 0, 0, 0] }
+        ];
+
+        function evaluate(m, g) {
+            let total = 0; g.forEach((v, i) => total += v * weights[i]);
+            let baseIdx = 8;
+            for(let i=0; i<=8; i++) { if(total >= levelRules[i].min) { baseIdx = i; break; } }
+            let meritIdx = baseIdx; let blockReason = "";
+            while(meritIdx <= 8) {
+                let r = levelRules[meritIdx]; let ok = true; let reason = "";
+                if(m < r.minT) { ok = false; reason = `Tempo insuficiente. (Exigia ${r.minT}m).`; }
+                else { for(let c=0; c<9; c++) { if(g[c] < r.minNotes[c]) { ok = false; reason = `Criterio '${criteriaNames[c]}' < ${r.minNotes[c].toFixed(1)}.`; break; } } }
+                if(ok) break; else { if(meritIdx === baseIdx) blockReason = reason; meritIdx++; }
+            }
+            let finalIdx = meritIdx; let type = "Mérito";
+            if(meritIdx > 0 && levelRules[meritIdx-1].auto > 0 && m >= levelRules[meritIdx-1].auto) { finalIdx = meritIdx - 1; type = "Automática (Tempo)"; }
+            return { total, baseIdx, meritIdx, finalIdx, type, blockReason };
+        }
+
+        // Tabela Individual dos Líderes (Mostrando foto + Nível local)
+        function generateLeaderTable(bossId, title, membersArray, hClass, logo, teamClass) {
+            let h = `
+            <div class="team-section" style="margin-bottom: 20px;">
+                <div class="team-header ${hClass}">
+                    <img src="${logo}" style="height: 26px !important; width: auto !important; filter: brightness(0) invert(1);">
+                    <h4>${title}</h4>
+                </div>
+                <div class="eval-table-container">
+                    <table class="eval-table" style="min-width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 200px; text-align: left; padding-left: 15px;">Colaborador</th>
+                                ${criteriaNames.map(c => `<th style="min-width: 80px;">${c}</th>`).join('')}
+                                <th style="min-width: 60px;">Total</th>
+                                <th style="min-width: 110px;">Nível Local</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            membersArray.forEach(member => {
+                let rId = `${bossId}-${member.id}`;
+                h += `<tr id="${rId}">
+                        <td>
+                            <div class="cs-profile ${teamClass}">
+                                <img src="${member.img}" crossorigin="anonymous" onerror="this.src='https://via.placeholder.com/150/CBD5E1/FFFFFF?text=CS'">
+                                <div class="cs-info">
+                                    <span class="cs-name">${member.name}</span>
+                                    <span class="cs-role">${member.role}</span>
+                                </div>
+                            </div>
+                        </td>
+                        ${Array(9).fill().map(() => `<td><input type="number" class="in-g" value="0" step="0.5" oninput="updateLeaderAndGlobal('${rId}', '${member.id}')"></td>`).join('')}
+                        <td class="result-cell" onclick="showLeaderCalc('${rId}', '${member.name}', '${member.id}')">
+                            <span class="out-t" style="font-weight:800; color:var(--text-gray);">0.0</span>
+                        </td>
+                        <td class="result-cell" onclick="showLeaderCalc('${rId}', '${member.name}', '${member.id}')">
+                            <span class="badge-level out-l">JUNIOR 1</span>
+                            <i class="fa-solid fa-magnifying-glass" style="margin-left:5px; font-size:10px; color:var(--blue-primary);"></i>
+                        </td>
+                      </tr>`;
+            });
+            return h + `</tbody></table></div></div>`;
+        }
+
+        // Tabela Final (Média)
+        function generateFinalTable(title, membersArray, hClass, logo, teamClass) {
+            let h = `
+            <div class="team-section" style="margin-bottom: 20px;">
+                <div class="team-header final">
+                    <img src="${logo}" style="height: 26px !important; width: auto !important; filter: brightness(0) invert(1);">
+                    <h4>Média: ${title}</h4>
+                </div>
+                <div class="eval-table-container">
+                    <table class="eval-table" style="min-width: 1100px;">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 200px; text-align: left; padding-left: 15px;">Colaborador</th>
+                                <th style="min-width: 70px;">Meses</th>
+                                <th style="min-width: 60px;">Sem.</th>
+                                ${criteriaNames.map(c => `<th style="min-width: 75px;">${c}</th>`).join('')}
+                                <th style="min-width: 70px;">Total</th>
+                                <th style="min-width: 120px;">Nível Final</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            membersArray.forEach(member => {
+                let rId = `final-${member.id}`;
+                h += `<tr id="${rId}">
+                        <td>
+                            <div class="cs-profile ${teamClass}">
+                                <img src="${member.img}" crossorigin="anonymous" onerror="this.src='https://via.placeholder.com/150/CBD5E1/FFFFFF?text=CS'">
+                                <div class="cs-info">
+                                    <span class="cs-name">${member.name}</span>
+                                    <span class="cs-role">${member.role}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><input type="number" class="in-m" value="0" oninput="onMonthsChange('${member.id}', '${member.name}')"></td>
+                        <td class="out-s" style="color:var(--text-gray); font-size:12px;">0.0</td>
+                        ${Array(9).fill().map(() => `<td><span class="avg-grade">0.0</span></td>`).join('')}
+                        <td class="result-cell" onclick="showCalc('${member.id}', '${member.name}')">
+                            <span class="out-t" style="font-size:16px; font-weight:800; color:var(--blue-secondary);">0.0</span>
+                        </td>
+                        <td class="result-cell" onclick="showCalc('${member.id}', '${member.name}')">
+                            <span class="badge-level out-l">JUNIOR 1</span>
+                            <i class="fa-solid fa-magnifying-glass" style="margin-left:5px; font-size:10px; color:var(--blue-primary);"></i>
+                        </td>
+                      </tr>`;
+            });
+            return h + `</tbody></table></div></div>`;
+        }
+
+        function updateLeaderOnly(leaderRowId, memberId) {
+            let row = document.getElementById(leaderRowId);
+            if(!row) return;
+
+            let finalRow = document.getElementById(`final-${memberId}`);
+            let m = finalRow ? (parseInt(finalRow.querySelector('.in-m').value) || 0) : 0;
+            
+            let total = 0;
+            let inputs = row.querySelectorAll('.in-g');
+            let g = [];
+            inputs.forEach((inp, i) => {
+                let val = Math.min(10, parseFloat(inp.value) || 0);
+                inp.value = val;
+                g.push(val);
+                total += val * weights[i];
+            });
+            row.querySelector('.out-t').innerText = total.toFixed(1);
+            
+            let res = evaluate(m, g);
+            let b = row.querySelector('.out-l'); 
+            b.innerText = levelRules[res.finalIdx].name;
+            b.style.background = levelRules[res.finalIdx].name.includes("SÊNIOR") ? "#DCFCE7" : (levelRules[res.finalIdx].name.includes("PLENO") ? "#FEF3C7" : "#EFF6FF");
+            b.style.color = levelRules[res.finalIdx].name.includes("SÊNIOR") ? "#166534" : (levelRules[res.finalIdx].name.includes("PLENO") ? "#B45309" : "#2563EB");
+        }
+
+        function updateLeaderAndGlobal(leaderRowId, memberId) {
+            updateLeaderOnly(leaderRowId, memberId);
+            let finalRow = document.getElementById(`final-${memberId}`);
+            let memberName = finalRow.querySelector(`.cs-name`).innerText;
+            calculateGlobal(memberId, memberName);
+        }
+
+        function onMonthsChange(memberId, memberName) {
+            ['douglas', 'susana', 'fernanda'].forEach(boss => {
+                let leaderRowId = `${boss}-${memberId}`;
+                updateLeaderOnly(leaderRowId, memberId);
+            });
+            calculateGlobal(memberId, memberName);
+        }
+
+        function calculateGlobal(memberId, memberName) {
+            let finalRow = document.getElementById(`final-${memberId}`);
+            if (!finalRow) return;
+
+            let avgGrades = [];
+            for (let i = 0; i < 9; i++) {
+                let sum = 0;
+                ['douglas', 'susana', 'fernanda'].forEach(boss => {
+                    let val = parseFloat(document.getElementById(`${boss}-${memberId}`).querySelectorAll('.in-g')[i].value) || 0;
+                    sum += val;
+                });
+                avgGrades.push(sum / 3);
+            }
+
+            let avgCells = finalRow.querySelectorAll('.avg-grade');
+            avgGrades.forEach((avg, i) => { avgCells[i].innerText = avg.toFixed(1); });
+
+            let m = parseInt(finalRow.querySelector('.in-m').value) || 0;
+            finalRow.querySelector('.out-s').innerText = (m / 6).toFixed(1);
+
+            let res = evaluate(m, avgGrades);
+            finalRow.querySelector('.out-t').innerText = res.total.toFixed(1);
+            
+            let b = finalRow.querySelector('.out-l'); 
+            b.innerText = levelRules[res.finalIdx].name;
+            b.style.background = levelRules[res.finalIdx].name.includes("SÊNIOR") ? "#DCFCE7" : (levelRules[res.finalIdx].name.includes("PLENO") ? "#FEF3C7" : "#EFF6FF");
+            b.style.color = levelRules[res.finalIdx].name.includes("SÊNIOR") ? "#166534" : (levelRules[res.finalIdx].name.includes("PLENO") ? "#B45309" : "#2563EB");
+        }
+
+        function showCompModal(idx) {
+            const data = compFullData[idx];
+            document.getElementById('modalTitle').innerText = data.title;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="modal-body-content">
+                    <p><b>Descrição:</b><br>${data.desc}</p>
+                    <div class="eval-section"><b>O que avaliar:</b><br>${data.eval}</div>
+                </div>`;
+            document.getElementById('genericModal').style.display = 'flex';
+        }
+
+        function showLeaderCalc(leaderRowId, name, memberId) {
+            let row = document.getElementById(leaderRowId);
+            let finalRow = document.getElementById(`final-${memberId}`);
+            let m = finalRow ? (parseInt(finalRow.querySelector('.in-m').value) || 0) : 0;
+            let g = Array.from(row.querySelectorAll('.in-g')).map(i => parseFloat(i.value) || 0);
+            
+            let r = evaluate(m, g);
+            
+            document.getElementById('modalTitle').innerText = `Memorial Local: ${name}`;
+            let h = `<div class="calc-grid"><div class="calc-box"><h4>Nota (Somente sua avaliação)</h4>`;
+            g.forEach((v, i) => h += `<div class="calc-item"><span>${criteriaNames[i]} (x${weights[i]})</span> <span>${(v*weights[i]).toFixed(1)}</span></div>`);
+            h += `<div class="calc-item total"><span>Pontuação Total</span> <span>${r.total.toFixed(1)}</span></div></div><div class="calc-box"><h4>Enquadramento de Promoção</h4><div class="calc-item"><span>Tempo de Casa Global:</span> <span>${m} meses</span></div><div class="calc-item"><span>Nível Base pela Nota:</span> <span>${levelRules[r.baseIdx].name}</span></div>`;
+            if(r.meritIdx > r.baseIdx) h += `<div class="calc-item" style="color:#991B1B; font-size:11px; background:#FEE2E2; padding:8px; border-radius:6px; margin-top:5px;">⚠️ ${r.blockReason}</div>`;
+            h += `<div class="calc-item total"><span>Aprovado no Mérito:</span> <span>${levelRules[r.meritIdx].name}</span></div></div></div><div style="background:var(--blue-light); border:1px dashed var(--blue-primary); padding:15px; border-radius:10px; text-align:center;"><h3>Nível Local: ${levelRules[r.finalIdx].name}</h3><p style="font-size:12px; margin-top:5px; color:var(--text-gray);">Enquadramento via: ${r.type}</p></div>`;
+            document.getElementById('modalBody').innerHTML = h;
+            document.getElementById('genericModal').style.display = 'flex';
+        }
+
+        function showCalc(memberId, name) {
+            let finalRow = document.getElementById(`final-${memberId}`);
+            let m = parseInt(finalRow.querySelector('.in-m').value) || 0;
+            let avgGrades = Array.from(finalRow.querySelectorAll('.avg-grade')).map(span => parseFloat(span.innerText) || 0);
+            
+            let r = evaluate(m, avgGrades);
+            
+            document.getElementById('modalTitle').innerText = `Memorial Final Consolidado: ${name}`;
+            let h = `<div class="calc-grid"><div class="calc-box"><h4>Média Consolidada (3 Avaliadores)</h4>`;
+            avgGrades.forEach((v, i) => h += `<div class="calc-item"><span>${criteriaNames[i]} (x${weights[i]})</span> <span>${(v*weights[i]).toFixed(1)}</span></div>`);
+            h += `<div class="calc-item total"><span>Pontuação Total</span> <span>${r.total.toFixed(1)}</span></div></div><div class="calc-box"><h4>Enquadramento de Promoção</h4><div class="calc-item"><span>Tempo de Casa:</span> <span>${m} meses</span></div><div class="calc-item"><span>Nível Base pela Nota:</span> <span>${levelRules[r.baseIdx].name}</span></div>`;
+            if(r.meritIdx > r.baseIdx) h += `<div class="calc-item" style="color:#991B1B; font-size:11px; background:#FEE2E2; padding:8px; border-radius:6px; margin-top:5px;">⚠️ ${r.blockReason}</div>`;
+            h += `<div class="calc-item total"><span>Aprovado no Mérito:</span> <span>${levelRules[r.meritIdx].name}</span></div></div></div><div style="background:var(--blue-light); border:1px dashed var(--blue-primary); padding:15px; border-radius:10px; text-align:center;"><h3>Nível Final Oficial: ${levelRules[r.finalIdx].name}</h3><p style="font-size:12px; margin-top:5px; color:var(--text-gray);">Enquadramento via: ${r.type}</p></div>`;
+            document.getElementById('modalBody').innerHTML = h;
+            document.getElementById('genericModal').style.display = 'flex';
+        }
+
+        function closeModal(e) { if(!e || e.target.id === 'genericModal' || e.target.closest('.close-btn')) document.getElementById('genericModal').style.display = 'none'; }
+        function exportPDF(divId, f) { let e = document.getElementById(divId); e.querySelector('.pdf-only-header').style.display='block'; html2pdf().set({margin:5, filename:f, jsPDF:{format:'a3', orientation:'landscape'}}).from(e).save().then(()=>e.querySelector('.pdf-only-header').style.display='none'); }
+
+        let current = 0; const slides = document.querySelectorAll('.slide');
+        function updateUI() {
+            slides.forEach((s, i) => s.classList.toggle('active', i === current));
+            document.querySelectorAll('.index-item').forEach((li, i) => li.classList.toggle('active-nav', i === current));
+            document.getElementById('prevBtn').disabled = current === 0;
+            document.getElementById('nextBtn').disabled = current === slides.length - 1;
+        }
+        function nextSlide() { if(current < slides.length-1) { current++; updateUI(); } }
+        function prevSlide() { if(current > 0) { current--; updateUI(); } }
+        function goToSlide(i) { current = i; updateUI(); }
+
+        window.onload = () => {
+            const lT = "https://i.ibb.co/HD848JNL/Contele-teams.png"; 
+            const lF = "https://exclusivo.contelerastreador.com.br/wp-content/uploads/2024/08/Contele-fleet.png";
+            
+            ['douglas', 'susana', 'fernanda'].forEach(b => { 
+                document.getElementById(`content-${b}`).innerHTML = 
+                    generateLeaderTable(b, 'Contele Teams', teamsData, 'teams', lT, 'teams') + 
+                    generateLeaderTable(b, 'Contele Fleet', fleetData, 'fleet', lF, 'fleet'); 
+            });
+
+            document.getElementById('content-final').innerHTML = 
+                generateFinalTable('Contele Teams', teamsData, 'final', lT, 'teams') + 
+                generateFinalTable('Contele Fleet', fleetData, 'final', lF, 'fleet');
+                
+            updateUI();
+        };
+    </script>
+</body>
+</html>
